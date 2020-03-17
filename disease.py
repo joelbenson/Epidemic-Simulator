@@ -5,26 +5,42 @@ class DiseaseState():
     def __init__(self):
         self.state = Healthy()
 
-
     def next_state(self):
 
-        #Tick disease clock
-        self.state.clock += 1
+        #Get next disease state period
+        disease = self.state
+
+        #If disease is Healthy or Deceased, return
+        if disease.name in ['Healthy', 'Deceased']:
+            return
+
+        #Get period of disease
+        disease.clock += 1
+        try:
+            disease.period = disease.period_dict[disease.clock]
+        except:
+            disease.period = 'convalescence'
+
+        #Update disease intensity, contagiousness, color, death probability, recovery_probability
+        disease.update_intensity()
+        disease.contagiousness = disease.properties['transmission_rate'] * disease.intensity
+        disease.update_color()
+        disease.update_death_probability()
+        disease.update_recovery_probability()
+        disease.contagiousness
 
         #Test for recovery
         fate = random.random()
-        if (fate < self.state.get_info()['recovery_rate']):
-            self.state = Healthy()
-            return
+        if (fate < disease.recovery_probability):
 
-        #Test for deceased
+            self.state = Healthy()
+
+        #Test for death
         fate = random.random()
-        if (fate < self.state.get_info()['death_rate']):
+        if (fate < disease.death_probability):
             self.state = Deceased()
-            return
 
         return
-
 
 
 class Disease():
@@ -36,19 +52,32 @@ class Disease():
         self.properties = {}
         self.clock = 0
 
-    def get_info(self):
+    def init_period_dict(self):
 
-        return {
-            'name': self.name,
-            'strain': self.strain,
-            'id': self.id,
-            'color': self.properties['color'],
-            'transmission_range': self.properties['transmission_range'],
-            'transmission_rate': self.properties['transmission_rate'],
-            'recovery_rate': self.properties['recovery_rate'],
-            'death_rate': self.properties['death_rate'],
-            'mutation_rate': self.properties['mutation_rate']
-        }
+        incubation_period = self.properties['incubation_period']
+        illness_period = self.properties['illness_period']
+        convalescence_period = self.properties['convalescence_period']
+
+        period_dict = {}
+
+        i = 1
+
+        for j in range(incubation_period):
+
+            period_dict[i] = 'incubation'
+            i += 1
+
+        for j in range(illness_period):
+
+            period_dict[i] = 'illness'
+            i += 1
+
+        for j in range(convalescence_period):
+
+            period_dict[i] = 'convalescence'
+            i += 1
+
+        self.period_dict = period_dict
 
     def test_mutation(self):
 
@@ -59,7 +88,6 @@ class Disease():
             self.mutate()
 
         return
-
 
     def mutate(self):
 
@@ -80,7 +108,6 @@ class Disease():
                     random.choice([-COLOR_CHANGE_RATE, COLOR_CHANGE_RATE]),
                     random.choice([-COLOR_CHANGE_RATE, COLOR_CHANGE_RATE]),
                 )
-                print(fate)
 
                 self.properties['color'] = (
                     min(max(int(self.properties['color'][0] + fate[0]), 0), 255),
@@ -110,6 +137,60 @@ class Disease():
 
         return
 
+    def update_intensity(self):
+
+        #If in incubation, make it fraction of way through
+        if (self.period == 'incubation'):
+
+            self.intensity = float(self.clock) / (self.properties['incubation_period'] + 1)
+
+        #If illness, make intensity full
+        elif (self.period == 'illness'):
+
+            self.intensity = 1
+
+        #If convalescence, have it decrease regularly to end
+        elif (self.period == 'convalescence'):
+
+            self.intensity *= (1 - (1.0 / self.properties['convalescence_period']))
+
+        return
+
+    def update_color(self):
+
+        property_r, property_g, property_b = self.properties['color']
+
+        #Use disease intensity to weight disese color and blank color
+        i = self.intensity
+        j = 1 - i
+
+        color = (int(i * property_r + j * 255), int(i * property_g + j * 255), int(i * property_b + j * 255))
+        self.color = (min([max([0, color[0]]), 255]), min([max([0, color[1]])]), min([max([0, color[2]])]))
+
+        return
+
+    def update_death_probability(self):
+
+        #If in illness period, adjust probability so expected death holds
+        if (self.period == 'illness'):
+
+            self.death_probability = self.properties['death_rate'] / self.properties['convalescence_period']
+
+        else: self.death_probability = 0
+
+        return
+
+    def update_recovery_probability(self):
+
+        #If in convalescence period, adjust probability so expected length of period holds
+        if (self.period == 'convalescence'):
+
+            self.recovery_probability = 1.0 / self.properties['convalescence_period']
+
+        else: self.recovery_probability = 0
+
+        return
+
     def reset(self):
 
         #Reset disease clock
@@ -120,39 +201,54 @@ class Disease():
 
         return
 
+
 class Healthy(Disease):
 
-    def __init__(self, strain=''):
+    def __init__(self):
         super().__init__()
         self.name = 'Healthy'
-        self.strain = strain
-        self.id = self.name + '-' + self.strain
+        self.strain = None
+        self.id = 'Healthy'
+        self.color = (255, 255, 255)
+        self.period = None
+        self.intensity = None
+        self.recovery_probability = None
+        self.death_probability = None
         self.properties ={
             'color': (255, 255, 255),
-            'transmission_range': 0,
-            'transmission_rate': 0,
-            'recovery_rate': 1,
-            'death_rate': 0,
-            'mutation_rate': 0
+            'transmission_range': None,
+            'transmission_rate': None,
+            'incubation_period': None,
+            'illness_period': None,
+            'convalescence_period': None,
+            'death_rate': None,
+            'mutation_rate': None
         }
-
+        self.clock = 0
 
 class Deceased(Disease):
 
-    def __init__(self, strain=''):
+    def __init__(self):
         super().__init__()
         self.name = 'Deceased'
-        self.strain = strain
-        self.id = self.name + '-' + self.strain
+        self.strain = None
+        self.id = None
+        self.color = (0, 0, 0)
+        self.period = None
+        self.intensity = None
+        self.recovery_probability = None
+        self.death_probability = None
         self.properties ={
             'color': (0, 0, 0),
-            'transmission_range': 0,
-            'transmission_rate': 0,
-            'recovery_rate': 0,
-            'death_rate': 1,
-            'mutation_rate': 0
+            'transmission_range': None,
+            'transmission_rate': None,
+            'incubation_period': None,
+            'illness_period': None,
+            'convalescence_period': None,
+            'death_rate': None,
+            'mutation_rate': None
         }
-
+        self.clock = 0
 
 class Influenza(Disease):
 
@@ -161,15 +257,25 @@ class Influenza(Disease):
         self.name = 'Influenza'
         self.strain = strain
         self.id = self.name + '-' + self.strain
+        self.color = (255, 255, 255)
+        self.period = 0
+        self.intensity = 0
+        self.contagiousness = 0
+        self.recovery_probability = 0
+        self.death_probability = 0
         self.properties ={
             'color': (0, 0, 255),
             'transmission_range': 2,
             'transmission_rate': 0.25,
-            'recovery_rate': 0.125,
+            'incubation_period': 2,
+            'illness_period': 3,
+            'convalescence_period': 3,
             'death_rate': 0.00004,
-            'mutation_rate': 0.0001
+            'mutation_rate': 0.00005
         }
         self.test_mutation()
+        self.init_period_dict()
+        self.clock = 0
 
 class Measles(Disease):
 
@@ -178,48 +284,76 @@ class Measles(Disease):
         self.name = 'Measles'
         self.strain = strain
         self.id = self.name + '-' + self.strain
+        self.color = (255, 255, 255)
+        self.period = 0
+        self.intensity = 0
+        self.contagiousness = 0
+        self.recovery_probability = 0
+        self.death_probability = 0
         self.properties ={
-            'color': (238,130,238),
+            'color': (238, 130, 238),
             'transmission_range': 5,
             'transmission_rate': 0.9,
-            'recovery_rate': 0.111,
+            'incubation_period': 10,
+            'illness_period': 10,
+            'convalescence_period': 4,
             'death_rate': 0.15,
-            'mutation_rate': 0.00009
+            'mutation_rate': 0.00005
         }
         self.test_mutation()
+        self.init_period_dict()
+        self.clock = 0
 
 class Pneumonia(Disease):
 
     def __init__(self, strain=''):
         super().__init__()
-        self.name = 'Measles'
+        self.name = 'Test'
         self.strain = strain
         self.id = self.name + '-' + self.strain
+        self.color = (255, 255, 255)
+        self.period = 0
+        self.intensity = 0
+        self.contagiousness = 0
+        self.recovery_probability = 0
+        self.death_probability = 0
         self.properties ={
             'color': (255, 105, 180),
             'transmission_range': 2,
             'transmission_rate': 0.25,
-            'recovery_rate': 0.07,
+            'incubation_period': 14,
+            'illness_period': 7,
+            'convalescence_period': 7,
             'death_rate': 0.075,
-            'mutation_rate': 0.0001
-
+            'mutation_rate': 0.00005
         }
         self.test_mutation()
+        self.init_period_dict()
+        self.clock = 0
 
 class Test(Disease):
 
     def __init__(self, strain=''):
         super().__init__()
-        self.name = 'Measles'
+        self.name = 'Test'
         self.strain = strain
         self.id = self.name + '-' + self.strain
+        self.color = (255, 255, 255)
+        self.period = 0
+        self.intensity = 0
+        self.contagiousness = 0
+        self.recovery_probability = 0
+        self.death_probability = 0
         self.properties ={
-            'color': (122, 122, 122),
-            'transmission_range': 5,
+            'color': (255, 0, 0),
+            'transmission_range': 2,
             'transmission_rate': 1,
-            'recovery_rate': 0.3,
+            'incubation_period': 10,
+            'illness_period': 10,
+            'convalescence_period': 10,
             'death_rate': 0,
             'mutation_rate': 0
-
         }
         self.test_mutation()
+        self.init_period_dict()
+        self.clock = 0

@@ -14,7 +14,6 @@ class Population():
         self.window = window
         self.init_agents()
 
-
     def init_agents(self):
         window = self.window
 
@@ -37,7 +36,6 @@ class Population():
 
         return
 
-
     def init_diseases(self, diseases, num_cases):
 
         #For each disease, choose random spot for each case
@@ -51,7 +49,6 @@ class Population():
 
         return
 
-
     def draw(self):
 
         for row in self.agent_array:
@@ -59,7 +56,6 @@ class Population():
                 agent.draw(self.window)
 
         return
-
 
     def next_state(self):
 
@@ -71,7 +67,6 @@ class Population():
 
         return
 
-
     def spread_disease(self):
 
         for row in self.agent_array:
@@ -80,7 +75,6 @@ class Population():
                 agent.spread_disease(self.agent_array)
 
         return
-
 
     def update_agent_states(self):
 

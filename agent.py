@@ -16,7 +16,6 @@ class Agent:
         self.disease_state = DiseaseState()
         self.immunities = set()
 
-
     def draw(self, window):
 
         self.update_image()
@@ -36,19 +35,17 @@ class Agent:
         self.disease_state.state = new_disease
 
         #Update agent immunities
-        self.immunities.add(disease.get_info()['id'])
+        self.immunities.add(disease.id)
 
         return
 
-
     def update_image(self):
 
-        color = self.disease_state.state.get_info()['color']
+        color = self.disease_state.state.color
         self.rectangle.setFill(color_rgb(color[0], color[1], color[2]))
         self.rectangle.setOutline(color_rgb(color[0], color[1], color[2]))
 
         return
-
 
     def next_state(self):
 
@@ -63,14 +60,13 @@ class Agent:
 
         return
 
-
     def update_state(self):
 
         #Get current disease
         current_disease = self.disease_state.state
 
         #Compute next state based on neighbor influence and current disease state
-        if (current_disease.get_info()['name'] == 'Healthy'):
+        if (current_disease.name == 'Healthy'):
 
             exposures = list(self.exposures.keys())
             neighbor_disease_counts = list(self.exposures.values())
@@ -88,7 +84,7 @@ class Agent:
                 neighbor_disease = exposures[i]
 
                 #If agent has immunity, skip this disease
-                if (neighbor_disease.get_info()['id'] in self.immunities):
+                if (neighbor_disease.id in self.immunities):
                     continue
 
                 #Test for each neighbor with disease
@@ -96,7 +92,7 @@ class Agent:
 
                     fate = random.random()
 
-                    if (fate < neighbor_disease.get_info()['transmission_rate']):
+                    if (fate < neighbor_disease.contagiousness):
 
                         self.contract_disease(neighbor_disease)
 
@@ -106,15 +102,14 @@ class Agent:
 
         return
 
-
     def spread_disease(self, population):
 
         #Spread agent's current disease to neighbors for next time
         disease = self.disease_state.state
-        transmission_range = disease.get_info()['transmission_range']
+        transmission_range = disease.properties['transmission_range']
 
         #If disease has range, spread to neighbors
-        if(transmission_range > 0):
+        if(transmission_range):
 
             #Get list of neighbor indexes within range
             neighbor_indexes = self.get_neighbors_in_range(transmission_range, population)
@@ -134,7 +129,6 @@ class Agent:
                     neighbor_agent.exposures[disease] += 1
 
         return
-
 
     def get_neighbors_in_range(self, transmission_range, population):
 
@@ -161,7 +155,7 @@ class Agent:
                 relative_index = neighborhood_array[x][y]
 
                 neighbor_index = ((i + relative_index[0]) % x_p, (j + relative_index[1]) % y_p)
-                
+
                 #If index is the center, continue
                 if (relative_index == (0, 0)):
                     continue
