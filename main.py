@@ -14,9 +14,8 @@ def main():
 
     #POPULATION AND DISEASE PARAMETERS
     POPULATION_DIMS = (140, 85)
-    DISEASES = [Influenza(), Measles(), Pneumonia(), Test()]
-    #TO DEFINE NEW DISEASES, SEE DISEASE.PY AND DEFINE A CLASS SIMILAR TO THOSE ABOVE, AND ADD TO DISEASES LIST
-    NUM_CASES = [0, 2, 0, 0]
+    DISEASES = [Influenza(), Measles(), Pneumonia(), Custom()] #To change properties of custom disease,
+    NUM_CASES = [1, 0, 0, 0]                                   #see end of disease.py
 
 
     #Initialize window

@@ -331,11 +331,11 @@ class Pneumonia(Disease):
         self.init_period_dict()
         self.clock = 0
 
-class Test(Disease):
+class Custom(Disease): #To create custom disease, only change values marked with #
 
     def __init__(self, strain=''):
         super().__init__()
-        self.name = 'Test'
+        self.name = 'Custom' #
         self.strain = strain
         self.id = self.name + '-' + self.strain
         self.color = (255, 255, 255)
@@ -345,14 +345,14 @@ class Test(Disease):
         self.recovery_probability = 0
         self.death_probability = 0
         self.properties ={
-            'color': (255, 0, 0),
-            'transmission_range': 2,
-            'transmission_rate': 1,
-            'incubation_period': 10,
-            'illness_period': 10,
-            'convalescence_period': 10,
-            'death_rate': 0,
-            'mutation_rate': 0
+            'color': (255, 0, 0), #
+            'transmission_range': 2, #
+            'transmission_rate': 0.33, #
+            'incubation_period': 2, #
+            'illness_period': 3, #
+            'convalescence_period': 2, #
+            'death_rate': 0.01, #
+            'mutation_rate': 0.001 #
         }
         self.test_mutation()
         self.init_period_dict()
