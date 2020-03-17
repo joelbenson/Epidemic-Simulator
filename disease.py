@@ -167,7 +167,7 @@ class Influenza(Disease):
             'transmission_rate': 0.25,
             'recovery_rate': 0.125,
             'death_rate': 0.00004,
-            'mutation_rate': 0.0005
+            'mutation_rate': 0.0001
         }
         self.test_mutation()
 
@@ -201,7 +201,7 @@ class Pneumonia(Disease):
             'transmission_rate': 0.25,
             'recovery_rate': 0.07,
             'death_rate': 0.075,
-            'mutation_rate': 0.0005
+            'mutation_rate': 0.0001
 
         }
         self.test_mutation()
@@ -215,7 +215,7 @@ class Test(Disease):
         self.id = self.name + '-' + self.strain
         self.properties ={
             'color': (122, 122, 122),
-            'transmission_range': 3,
+            'transmission_range': 5,
             'transmission_rate': 1,
             'recovery_rate': 0.3,
             'death_rate': 0,
